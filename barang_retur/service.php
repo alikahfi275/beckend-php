@@ -17,7 +17,7 @@ if (
 ) {
     echo json_encode([
         'status' => 'error',
-        'message' => 'Semua field wajib diisi kecuali catatan'
+        'message' => 'Semua field wajib diisi kecuali catatan dan tanggal_kembali'
     ]);
     exit;
 }
@@ -32,12 +32,14 @@ $status = $conn->real_escape_string($data->status);
 $catatan = isset($data->catatan) ? $conn->real_escape_string($data->catatan) : null;
 $nama_pelanggan = $conn->real_escape_string($data->nama_pelanggan);
 $tanggal_diantar = $conn->real_escape_string($data->tanggal_diantar);
+$tanggal_kembali = isset($data->tanggal_kembali) ? $conn->real_escape_string($data->tanggal_kembali) : null;
 
 // Query insert
 $sql = "INSERT INTO barang_retur_service 
-(nama_barang, kode_barang, tanggal_retur, jumlah, supplier, status, catatan, nama_pelanggan, tanggal_diantar)
+(nama_barang, kode_barang, tanggal_retur, jumlah, supplier, status, catatan, nama_pelanggan, tanggal_diantar, tanggal_kembali)
 VALUES 
-('$nama_barang', '$kode_barang', '$tanggal_retur', $jumlah, '$supplier', '$status', '$catatan', '$nama_pelanggan', '$tanggal_diantar')";
+('$nama_barang', '$kode_barang', '$tanggal_retur', $jumlah, '$supplier', '$status', '$catatan', '$nama_pelanggan', '$tanggal_diantar', " . 
+($tanggal_kembali ? "'$tanggal_kembali'" : "NULL") . ")";
 
 if ($conn->query($sql) === TRUE) {
     echo json_encode(['status' => 'success', 'message' => 'Data retur berhasil disimpan']);
