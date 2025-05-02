@@ -1,23 +1,49 @@
 <?php
-include_once '../../config/db.php';
+include_once '../config/db.php';
 
+// Ambil input dari body request
 $data = json_decode(file_get_contents("php://input"));
 
-$kode_barang_retur = $data->kode_barang_retur;
-$nama_barang = $data->nama_barang;
-$tanggal_retur = $data->tanggal_retur;
-$jumlah_barang = $data->jumlah_barang;
-$supplier = $data->supplier;
-$status = $data->status;
-$catatan = $data->catatan;
+// Validasi input
+if (
+    empty($data->nama_barang) ||
+    empty($data->kode_barang) ||
+    empty($data->tanggal_retur) ||
+    empty($data->jumlah) ||
+    empty($data->supplier) ||
+    empty($data->status) ||
+    empty($data->nama_pelanggan) ||
+    empty($data->tanggal_diantar)
+) {
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Semua field wajib diisi kecuali catatan'
+    ]);
+    exit;
+}
 
-$sql = "INSERT INTO barang_retur_service (kode_barang_retur, nama_barang, tanggal_retur, jumlah_barang, supplier, status, catatan) 
-        VALUES ('$kode_barang_retur', '$nama_barang', '$tanggal_retur', '$jumlah_barang', '$supplier', '$status', '$catatan')";
+// Sanitasi data
+$nama_barang = $conn->real_escape_string($data->nama_barang);
+$kode_barang = $conn->real_escape_string($data->kode_barang);
+$tanggal_retur = $conn->real_escape_string($data->tanggal_retur);
+$jumlah = (int) $data->jumlah;
+$supplier = $conn->real_escape_string($data->supplier);
+$status = $conn->real_escape_string($data->status);
+$catatan = isset($data->catatan) ? $conn->real_escape_string($data->catatan) : null;
+$nama_pelanggan = $conn->real_escape_string($data->nama_pelanggan);
+$tanggal_diantar = $conn->real_escape_string($data->tanggal_diantar);
+
+// Query insert
+$sql = "INSERT INTO barang_retur_service 
+(nama_barang, kode_barang, tanggal_retur, jumlah, supplier, status, catatan, nama_pelanggan, tanggal_diantar)
+VALUES 
+('$nama_barang', '$kode_barang', '$tanggal_retur', $jumlah, '$supplier', '$status', '$catatan', '$nama_pelanggan', '$tanggal_diantar')";
 
 if ($conn->query($sql) === TRUE) {
-    echo json_encode(["status" => "success", "message" => "Barang retur service berhasil"]);
+    echo json_encode(['status' => 'success', 'message' => 'Data retur berhasil disimpan']);
 } else {
-    echo json_encode(["status" => "error", "message" => "Error: " . $conn->error]);
+    echo json_encode(['status' => 'error', 'message' => 'Gagal menyimpan data: ' . $conn->error]);
 }
+
 $conn->close();
 ?>
