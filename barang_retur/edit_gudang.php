@@ -23,7 +23,7 @@ $catatan = isset($data->catatan) ? $conn->real_escape_string($data->catatan) : '
 $status = isset($data->status) ? $conn->real_escape_string($data->status) : '';
 $tanggal_kembali = isset($data->tanggal_kembali) ? $conn->real_escape_string($data->tanggal_kembali) : null;
 
-// Query update berdasarkan kode_barang
+// Query update ke barang_retur_gudang
 $sql = "UPDATE barang_retur_gudang SET
             nama_barang = '$nama_barang',
             tanggal_retur = '$tanggal_retur',
@@ -34,24 +34,32 @@ $sql = "UPDATE barang_retur_gudang SET
             tanggal_kembali = " . ($tanggal_kembali ? "'$tanggal_kembali'" : "NULL") . "
         WHERE kode_barang = '$kode_barang'";
 
+$response = [];
+
 if ($conn->query($sql) === TRUE) {
     if ($conn->affected_rows > 0) {
-        echo json_encode([
+        // Update juga di tabel riwayat_return dengan tipe = 'gudang'
+        $updateRiwayat = "UPDATE riwayat_return SET nama_barang = '$nama_barang' 
+                          WHERE kode_barang = '$kode_barang' AND tipe = 'gudang'";
+        $conn->query($updateRiwayat); // Optional: bisa dicek juga affected_rows-nya
+
+        $response = [
             'status' => 'success',
-            'message' => 'Data barang retur berhasil diperbarui'
-        ]);
+            'message' => 'Data barang retur berhasil diperbarui (termasuk riwayat_return)'
+        ];
     } else {
-        echo json_encode([
+        $response = [
             'status' => 'warning',
             'message' => 'Data tidak ditemukan atau tidak ada perubahan'
-        ]);
+        ];
     }
 } else {
-    echo json_encode([
+    $response = [
         'status' => 'error',
         'message' => 'Gagal memperbarui data: ' . $conn->error
-    ]);
+    ];
 }
 
+echo json_encode($response);
 $conn->close();
 ?>
